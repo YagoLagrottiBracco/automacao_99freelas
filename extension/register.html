@@ -4,43 +4,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - 99Freelas Assistant</title>
+    <title>Cadastro - 99Freelas Assistant</title>
     <link rel="stylesheet" href="styles-login.css">
 </head>
 
 <body>
     <div class="login-container">
-        <div class="logo">🚀</div>
-        <h1>Bem-vindo de volta!</h1>
-        <p class="subtitle">Faça login para continuar automatizando.</p>
+        <div class="logo">✨</div>
+        <h1>Criar Conta</h1>
+        <p class="subtitle">Comece sua jornada de automação.</p>
 
-        <form id="login-form">
+        <form id="register-form">
             <div class="input-group">
                 <label for="email">E-mail</label>
                 <input type="email" id="email" placeholder="seu@email.com" required>
             </div>
             <div class="input-group">
                 <label for="password">Senha</label>
-                <input type="password" id="password" placeholder="••••••••" required>
+                <input type="password" id="password" placeholder="Mínimo 6 caracteres" required minlength="6">
             </div>
 
             <div id="message" class="message"></div>
 
-            <button type="submit" id="btn-login" class="btn-primary">
-                <span id="btn-text">Entrar</span>
+            <button type="submit" id="btn-register" class="btn-primary">
+                <span id="btn-text">Cadastrar</span>
             </button>
         </form>
 
         <div class="links">
-            <a href="register.html" id="link-signup">Criar Conta</a> •
-            <a href="forgot-password.html" id="link-forgot">Esqueci a Senha</a>
+            Já tem conta? <a href="login.html">Fazer Login</a>
         </div>
     </div>
 
-    <!-- Carrega Supabase Library localmente -->
+    <!-- Scripts -->
     <script src="lib/supabase.js"></script>
     <script src="config.js"></script>
-    <script src="login.js"></script>
+    <script src="register.js"></script>
 </body>
 
 </html>

@@ -1,26 +1,19 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializa Supabase
-    // Assume que SUPABASE_URL e SUPABASE_ANON_KEY vêm do config.js
     if (!window.supabase) {
-        console.error('Supabase library not loaded');
         showMessage('Erro: Biblioteca Supabase não carregada.', 'error');
         return;
     }
 
+    // Pega configurações e adapter do config.js
     const config = window.SUPABASE_CONFIG || {
         SUPABASE_URL: window.SUPABASE_URL,
-        SUPABASE_ANON_KEY: window.SUPABASE_ANON_KEY,
-        ChromeStorageAdapter: window.ChromeStorageAdapter // Fallback se não usar o objeto global
+        SUPABASE_ANON_KEY: window.SUPABASE_ANON_KEY
     };
 
-    if (!config.SUPABASE_URL || config.SUPABASE_URL === 'PLACEHOLDER_URL') {
-        showMessage('Erro de Configuração: Adicione as chaves no config.js', 'error');
-        return;
-    }
-
-    // Se o adapter não estiver no objeto global (versão simplificada), definimos aqui ou assumimos que config.js exportou
-    const storageAdapter = config.ChromeStorageAdapter || {
+    // Adapter inline se não vier do config
+    const storageAdapter = (config.ChromeStorageAdapter) ? config.ChromeStorageAdapter : {
         getItem: (key) => new Promise(res => chrome.storage.local.get([key], r => res(r[key]))),
         setItem: (key, val) => new Promise(res => chrome.storage.local.set({ [key]: val }, res)),
         removeItem: (key) => new Promise(res => chrome.storage.local.remove(key, res)),
@@ -35,15 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Elementos
-    const form = document.getElementById('login-form');
+    const form = document.getElementById('register-form');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
-    const btnLogin = document.getElementById('btn-login');
+    const btnRegister = document.getElementById('btn-register');
     const btnText = document.getElementById('btn-text');
     const messageDiv = document.getElementById('message');
 
-    // Handler de Submit
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -52,52 +43,45 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = passwordInput.value;
 
         try {
-            const { data, error } = await _supabase.auth.signInWithPassword({
+            const { data, error } = await _supabase.auth.signUp({
                 email,
                 password
             });
 
             if (error) throw error;
 
-            console.log('Login realizado:', data);
-            showMessage('Login realizado com sucesso!', 'success');
+            console.log('Cadastro realizado:', data);
 
-            // Salva token e user info explicitamente (embora Supabase já salve)
-            // para facilitar acesso em outras partes síncronas se precisar
-            await chrome.storage.local.set({
-                session: data.session,
-                user: data.user
-            });
-
-            // Redireciona ou fecha (depende de onde foi aberto)
-            setTimeout(() => {
-                // Se estiver num popup, pode fechar ou ir para main
-                // Se estiver em aba completa, fecha a aba
-                window.close();
-            }, 1000);
+            // Verifica se precisa de confirmar email
+            if (data.user && !data.session) {
+                showMessage('Verifique seu e-mail para confirmar o cadastro.', 'success');
+            } else {
+                showMessage('Cadastro realizado! Redirecionando...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            }
 
         } catch (error) {
-            console.error('Login error:', error);
-            showMessage(error.message || 'Erro ao realizar login', 'error');
+            console.error('Registration error:', error);
+            showMessage(error.message || 'Erro ao realizar cadastro', 'error');
         } finally {
             setLoading(false);
         }
     });
 
-    // Helper functions
     function setLoading(isLoading) {
-        btnLogin.disabled = isLoading;
+        btnRegister.disabled = isLoading;
         if (isLoading) {
             btnText.style.display = 'none';
-            // Adiciona spinner se não tiver
-            if (!btnLogin.querySelector('.spinner')) {
+            if (!btnRegister.querySelector('.spinner')) {
                 const spinner = document.createElement('span');
                 spinner.className = 'spinner';
-                btnLogin.prepend(spinner);
+                btnRegister.prepend(spinner);
             }
         } else {
             btnText.style.display = 'inline';
-            const spinner = btnLogin.querySelector('.spinner');
+            const spinner = btnRegister.querySelector('.spinner');
             if (spinner) spinner.remove();
         }
     }

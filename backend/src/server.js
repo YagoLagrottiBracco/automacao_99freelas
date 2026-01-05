@@ -82,8 +82,10 @@ app.use('/api', webhookRoutes);
 app.use(express.json());
 
 // Rotas da API
+const userRoutes = require('./routes/user.routes');
 app.use('/api', analyzeProjectRoute);
 app.use('/api', paymentsRoutes);
+app.use('/api', userRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

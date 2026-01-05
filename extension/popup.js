@@ -19,7 +19,8 @@
     let state = {
         projectData: null,
         analysisResult: null,
-        isLoading: false
+        isLoading: false,
+        userStatus: null // Dados do usuário
     };
 
     // Elementos do DOM
@@ -421,6 +422,113 @@
         });
     }
 
+    // Novos Elementos
+    const userElements = {
+        userEmail: document.getElementById('user-email'),
+        userBadge: document.getElementById('user-badge'),
+        btnLogout: document.getElementById('btn-logout'),
+        upgradeOverlay: document.getElementById('upgrade-overlay'),
+        btnSubscribeOverlay: document.getElementById('btn-subscribe-overlay'),
+        linkLogoutOverlay: document.getElementById('link-logout-overlay')
+    };
+
+    /**
+     * Busca dados do usuário no backend
+     */
+    async function fetchUserInfo(token) {
+        try {
+            const response = await fetch(`${CONFIG.backendUrl}/api/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                state.userStatus = data;
+                updateUserInfoUI();
+            } else {
+                console.error('Erro ao buscar info do usuário');
+            }
+        } catch (error) {
+            console.error('Erro fetchUserInfo:', error);
+        }
+    }
+
+    /**
+     * Atualiza a UI com dados do usuário
+     */
+    function updateUserInfoUI() {
+        if (!state.userStatus) return;
+
+        userElements.userEmail.textContent = state.userStatus.email;
+
+        // Badge logic
+        const status = state.userStatus.status;
+        const remaining = state.userStatus.trial_remaining;
+
+        userElements.userBadge.className = 'badge ' + status;
+
+        if (status === 'premium') {
+            userElements.userBadge.textContent = 'PREMIUM';
+        } else if (status === 'trial') {
+            userElements.userBadge.textContent = `TRIAL (${remaining} RESTANTES)`;
+        } else if (status === 'expired') {
+            userElements.userBadge.textContent = 'EXPIRADO';
+            showUpgradeOverlay();
+        }
+    }
+
+    function showUpgradeOverlay() {
+        userElements.upgradeOverlay.classList.remove('hidden');
+    }
+
+    async function handleLogout() {
+        await new Promise(resolve => chrome.storage.local.remove(['session', 'user'], resolve));
+        window.location.href = 'login.html';
+    }
+
+    async function handleSubscribe() {
+        // Redireciona para checkout (precisamos criar esse endpoint de create-checkout-session no content ou aqui)
+        // Como o botão abre nova aba, podemos chamar o backend para pegar a URL e abrir
+        try {
+            const storageData = await new Promise(r => chrome.storage.local.get(['session'], r));
+            const token = storageData.session?.access_token;
+
+            const response = await fetch(`${CONFIG.backendUrl}/api/create-checkout-session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            if (data.url) {
+                window.open(data.url, '_blank');
+            } else {
+                alert('Erro ao iniciar pagamento. Tente novamente.');
+            }
+        } catch (error) {
+            console.error('Erro no subscribe:', error);
+            alert('Erro ao conectar com servidor de pagamento.');
+        }
+    }
+
+    /**
+     * Verifica e gerencia autenticação
+     */
+    async function checkAuth() {
+        return new Promise((resolve) => {
+            chrome.storage.local.get(['session'], (result) => {
+                if (!result.session || !result.session.access_token) {
+                    window.location.href = 'login.html';
+                    resolve(null);
+                } else {
+                    resolve(result.session.access_token);
+                }
+            });
+        });
+    }
+
     /**
      * Verifica se estamos em uma página válida
      */
@@ -437,9 +545,19 @@
     }
 
     // Inicialização
-    document.addEventListener('DOMContentLoaded', () => {
-        initEventListeners();
+    document.addEventListener('DOMContentLoaded', async () => {
+        const token = await checkAuth();
+        if (!token) return;
+
+        // Listeners novos
+        userElements.btnLogout.addEventListener('click', handleLogout);
+        userElements.linkLogoutOverlay.addEventListener('click', handleLogout);
+        userElements.btnSubscribeOverlay.addEventListener('click', handleSubscribe);
+
+        // Carrega dados iniciais
+        fetchUserInfo(token);
         loadSettings();
+        initEventListeners();
         checkValidPage();
     });
 })();

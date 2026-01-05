@@ -9,7 +9,28 @@
 </head>
 
 <body>
+  <!-- Overlay de Upgrade (Bloqueio) -->
+  <div id="upgrade-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <div class="icon">🔒</div>
+      <h2>Período de Teste Finalizado</h2>
+      <p>Você atingiu o limite de 10 propostas gratuitas.</p>
+      <p>Assine agora para continuar gerando propostas ilimitadas com IA.</p>
+      <button id="btn-subscribe-overlay" class="btn-primary-large">Assinar Premium (R$ 15/mês)</button>
+      <p class="small-text"><a href="#" id="link-logout-overlay">Sair da conta</a></p>
+    </div>
+  </div>
+
   <div class="container">
+    <!-- Barra de Usuário -->
+    <div id="user-bar" class="user-bar">
+      <div class="user-info">
+        <span id="user-email" class="email">Carregando...</span>
+        <span id="user-badge" class="badge">...</span>
+      </div>
+      <button id="btn-logout" class="btn-icon" title="Sair">↪️</button>
+    </div>
+
     <!-- Header -->
     <header class="header">
       <div class="logo">

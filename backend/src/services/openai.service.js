@@ -67,7 +67,9 @@ async function generateProposal(prompt) {
         );
 
         return {
-            textoProposta,
+            textoProposta, // Legado / Fallback
+            textoExplicacao: parsed.textoExplicacao || parsed.textExplanation || '',
+            duvidaPertinente: parsed.duvidaPertinente || '',
             prazo: parsed.prazo || parsed.deadline || null,
             valor: parsed.valor || parsed.value || null
         };

@@ -383,6 +383,15 @@
         elements.btnFill.addEventListener('click', fillProposalForm);
         elements.btnCopy.addEventListener('click', copyProposalText);
 
+        // Options Button
+        const btnOptions = document.getElementById('btn-options');
+        if (btnOptions) {
+            btnOptions.addEventListener('click', () => {
+                // Abre em nova aba para garantir compatibilidade
+                window.open('options.html', '_blank');
+            });
+        }
+
         // Toggle Listener
         if (elements.modeToggle) {
             elements.modeToggle.addEventListener('change', (e) => {

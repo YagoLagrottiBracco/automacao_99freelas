@@ -101,6 +101,10 @@ body {
   border-radius: var(--radius-sm);
 }
 
+#btn-options:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
 /* Status Bar */
 .status-bar {
   display: flex;

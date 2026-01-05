@@ -63,10 +63,11 @@ router.post('/analyze', async (req, res, next) => {
 
         const finalProposalText = promptBuilder.assembleProposal(
             projectData.nomeCliente,
-            aiResponse.textoProposta,
+            aiResponse.textoExplicacao || aiResponse.textoProposta, // Tenta usar o bruto, fallback para o montado
             projectData,
             rulesResult,
-            userConfig?.proposalTemplate
+            userConfig?.proposalTemplate,
+            aiResponse.duvidaPertinente
         );
 
         const response = {

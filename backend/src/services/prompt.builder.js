@@ -92,6 +92,7 @@ REGRAS OBRIGATÓRIAS (mantenha independente do seu papel):
 FORMATO DE RESPOSTA (JSON):
 {
   "textoExplicacao": "Texto da explicação aqui...",
+  "duvidaPertinente": "Uma pergunta técnica ou estratégica relevante sobre o projeto...",
   "prazo": número em dias (opcional, se quiser sobrescrever),
   "valor": número em reais (opcional, se quiser sobrescrever)
 }`;
@@ -99,21 +100,19 @@ FORMATO DE RESPOSTA (JSON):
 
     return `Você é um assistente especializado em criar propostas profissionais para projetos de desenvolvimento web e software.
 
-Sua tarefa é gerar APENAS o texto de explicação do projeto (#TEXTODEEXPLICAÇÃO) que será inserido no template da proposta.
+Sua tarefa é gerar:
+1. O texto de explicação do projeto (#TEXTODEEXPLICAÇÃO) que será inserido no template da proposta.
+2. Uma dúvida pertinente ({DUVIDA_PERTINENTE}) para engajar o cliente.
 
 REGRAS IMPORTANTES:
-1. O texto deve ser profissional, objetivo e personalizado para o projeto
-2. Deve demonstrar entendimento do problema do cliente
-3. Deve mencionar as tecnologias relevantes quando apropriado
-4. Deve ser conciso (máximo 200 palavras)
-5. NÃO inclua saudações ou despedidas (já estão no template)
-6. NÃO inclua links de portfólio (já estão no template)
-7. NÃO mencione prazos ou valores diretamente no texto
-8. Foque em demonstrar competência técnica e entendimento do projeto
+1. O texto explicação deve ser profissional, objetivo e personalizado
+2. A dúvida deve ser técnica ou de negócio, demonstrando que você pensou na solução
+3. NÃO inclua saudações ou despedidas no texto de explicação (já estão no template)
 
 FORMATO DE RESPOSTA (JSON):
 {
   "textoExplicacao": "Texto da explicação aqui...",
+  "duvidaPertinente": "Uma pergunta técnica ou estratégica relevante sobre o projeto...",
   "prazo": número em dias,
   "valor": número em reais (ou null se não aplicável)
 }`;
@@ -159,7 +158,7 @@ ${valorSugerido ? `- Valor Sugerido: R$ ${valorSugerido}` : '- Valor: A definir 
 
 INSTRUÇÕES:
 1. Crie um texto de explicação profissional para este projeto
-2. Demonstre entendimento do problema e como você pode resolver
+2. Crie UMA dúvida pertinente (técnica ou de negócio) que mostre interesse e experiência
 3. Mencione sua experiência com ${stackRecomendada} de forma natural
 4. Seja objetivo e direto
 
@@ -175,9 +174,10 @@ Responda APENAS com o JSON no formato especificado.`;
  * @param {Object} projectData - Dados completos do projeto (para variáveis extras)
  * @param {Object} rulesResult - Dados da regra (para variáveis extras)
  * @param {string} customTemplate - Template personalizado
+ * @param {string} duvidaPertinente - Dúvida gerada pela IA
  * @returns {string} - Proposta completa
  */
-function assembleProposal(nomeCliente, textoExplicacao, projectData, rulesResult, customTemplate) {
+function assembleProposal(nomeCliente, textoExplicacao, projectData, rulesResult, customTemplate, duvidaPertinente) {
     let template = customTemplate || PROPOSAL_TEMPLATE;
 
     // Variáveis disponíveis
@@ -189,7 +189,7 @@ function assembleProposal(nomeCliente, textoExplicacao, projectData, rulesResult
         '{TITULO_PROJETO}': projectData?.tituloProjeto || 'seu projeto',
         '{STACK_TECNOLOGICA}': rulesResult?.stackRecomendada || 'tecnologias modernas',
         '{ANALISE_TECNICA}': textoExplicacao, // Alias
-        '{DUVIDA_PERTINENTE}': 'Gostaria de saber mais detalhes sobre o escopo?', // Placeholder simples
+        '{DUVIDA_PERTINENTE}': duvidaPertinente || 'Gostaria de saber mais detalhes sobre o escopo?',
         '{PRAZO}': rulesResult?.prazoSugerido ? `${rulesResult.prazoSugerido} dias` : 'a combinar',
         '{VALOR}': rulesResult?.valorSugerido ? `R$ ${rulesResult.valorSugerido}` : 'a combinar'
     };

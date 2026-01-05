@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - 99Freelas Assistant</title>
+    <link rel="stylesheet" href="styles-login.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="logo">🚀</div>
+        <h1>Bem-vindo de volta!</h1>
+        <p class="subtitle">Faça login para continuar automatizando.</p>
+
+        <form id="login-form">
+            <div class="input-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" placeholder="seu@email.com" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <button type="submit" id="btn-login" class="btn-primary">
+                <span id="btn-text">Entrar</span>
+            </button>
+        </form>
+
+        <div class="links">
+            <a href="#" id="link-signup">Criar Conta</a> •
+            <a href="#" id="link-forgot">Esqueci a Senha</a>
+        </div>
+    </div>
+
+    <!-- Carrega Supabase Library localmente -->
+    <script src="lib/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="login.js"></script>
+</body>
+
+</html>

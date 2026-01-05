@@ -17,9 +17,11 @@
     "author": "Lagrotti",
     "license": "MIT",
     "dependencies": {
+        "@supabase/supabase-js": "^2.89.0",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
         "express": "^4.18.2",
-        "openai": "^4.24.1"
+        "openai": "^4.24.1",
+        "stripe": "^20.1.0"
     }
 }

@@ -71,7 +71,19 @@ app.use((req, res, next) => {
 });
 
 // Rotas
+const analyzeProjectRoute = require('./routes/analyzeProject');
+const paymentsRoutes = require('./routes/payments.routes');
+const webhookRoutes = require('./routes/webhook.routes');
+
+// Webhooks devem ser registrados ANTES do parser JSON global se eles precisarem do body raw
+// O webhook.routes.js usa express.raw(), então o express deve rotear corretamente
+app.use('/api', webhookRoutes);
+
+app.use(express.json());
+
+// Rotas da API
 app.use('/api', analyzeProjectRoute);
+app.use('/api', paymentsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

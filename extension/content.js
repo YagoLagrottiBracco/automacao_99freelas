@@ -18,10 +18,73 @@
     endpoints: {
       analyze: '/api/analyze'
     },
-    autoRun: true, // Rodar automaticamente ao carregar a página
-    autoFill: true, // Preencher formulário automaticamente
-    showWidget: true // Mostrar widget com resultados
+    selectors: {
+      projectTitle: 'h1.projeto-titulo',
+      clientName: '.box-img-info .img-info .text .title a',
+      projectDescription: '.projeto-detalhes',
+      projectDescriptionAlt: '.box-detalhes .detalhes',
+      projectStats: '.box-stats ul li', // Lista com orçam, prazo, propostas
+      projectStack: '.box-habilidades ul li a' // Lista de skills
+    },
+    autoRun: true, // Default, será atualizado pelo storage
+    autoFill: true,
+    showWidget: true, // Default, será atualizado pelo storage
+    retryInterval: 2000,
+    maxRetries: 3
   };
+
+  /**
+   * Função principal de inicialização
+   */
+  function init() {
+    console.log('99Freelas Proposal Assistant - Init (AutoMode: ' + CONFIG.autoRun + ')');
+
+    if (CONFIG.autoRun && isProjectPage()) {
+      // Aguarda um pouco para garantir que a página está totalmente carregada
+      setTimeout(() => {
+        runAutomation();
+      }, 1000);
+    }
+  }
+
+  // Carrega configurações iniciais
+  chrome.storage.local.get(['autoMode'], (result) => {
+    // Se undefined, considera true (default)
+    const autoMode = result.autoMode !== false;
+    CONFIG.autoRun = autoMode;
+    CONFIG.showWidget = autoMode;
+
+    // Inicia automação
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  });
+
+  // Ouve mudanças nas configurações
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.autoMode) {
+      const newAutoMode = changes.autoMode.newValue;
+      CONFIG.autoRun = newAutoMode;
+      CONFIG.showWidget = newAutoMode;
+
+      console.log('99Freelas Assistant: Modo automático alterado para', newAutoMode);
+
+      if (newAutoMode) {
+        // Se ativado e estiver numa página válida, tenta iniciar
+        if (isProjectPage()) {
+          runAutomation();
+        }
+      } else {
+        // Se desativado, remove o widget
+        const widget = document.getElementById('nnf-assistant-widget');
+        if (widget) widget.remove();
+        state.hasRun = false; // Reset state para permitir rodar novamente se reativado
+        state.isProcessing = false;
+      }
+    }
+  });
 
   /**
    * Seletores CSS para extração de dados - BASEADOS NO HTML REAL DO 99FREELAS
@@ -600,10 +663,17 @@
         </div>
       `);
 
+      const userConfig = await new Promise(resolve => {
+        chrome.storage.local.get(['userConfig'], (result) => resolve(result.userConfig || {}));
+      });
+
       const response = await fetch(`${CONFIG.backendUrl}${CONFIG.endpoints.analyze}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(state.projectData)
+        body: JSON.stringify({
+          ...state.projectData,
+          userConfig
+        })
       });
 
       if (!response.ok) {
@@ -778,11 +848,5 @@
   // Inicialização
   console.log('99Freelas Proposal Assistant - Content Script carregado');
 
-  // Executa automaticamente se estiver na página de projeto
-  if (CONFIG.autoRun && isProjectPage()) {
-    // Aguarda um pouco para garantir que a página está totalmente carregada
-    setTimeout(() => {
-      runAutomation();
-    }, 1000);
-  }
+
 })();

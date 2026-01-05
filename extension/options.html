@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - 99Freelas Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            min-width: unset;
+            /* Remove min-width do popup */
+        }
+
+        .options-container {
+            display: grid;
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-hint {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .tags-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            min-height: 42px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag-whitelist {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .tag-blacklist {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        .tags-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            min-width: 120px;
+            outline: none;
+        }
+
+        .save-bar {
+            position: sticky;
+            bottom: 0;
+            background: var(--bg-primary);
+            padding: 16px 0;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container options-container">
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🚀</span>
+                <h1>Configurações do Assistente</h1>
+            </div>
+        </header>
+
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="profile">👤 Perfil & Tech</button>
+            <button class="tab-btn" data-tab="proposal">📝 Proposta & IA</button>
+            <button class="tab-btn" data-tab="business">💰 Negócio</button>
+        </div>
+
+        <!-- TAB: Perfil & Tech -->
+        <div id="profile" class="tab-content active">
+            <div class="section">
+                <div class="section-title">Minhas Tecnologias (Whitelist)</div>
+                <div class="form-group">
+                    <span class="form-hint">Tecnologias que você domina. A IA dará preferência e destaque para projetos
+                        que usem essas stacks. Digite e pressione Enter.</span>
+                    <div class="tags-input-container" id="whitelist-container">
+                        <input type="text" class="tags-input" placeholder="Ex: React, Node.js, Python..."
+                            id="whitelist-input">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" style="margin-top: 24px;">
+                <div class="section-title">Tecnologias Bloqueadas (Blacklist)</div>
+                <div class="form-group">
+                    <span class="form-hint">Tecnologias que você NÃO trabalha. Projetos com essas tecnologias serão
+                        marcados como arriscados ou inviáveis.</span>
+                    <div class="tags-input-container" id="blacklist-container">
+                        <input type="text" class="tags-input" placeholder="Ex: Java, C#, PHP..." id="blacklist-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Proposta & IA -->
+        <div id="proposal" class="tab-content">
+            <div class="section">
+                <div class="section-title">Persona da IA</div>
+                <div class="form-group">
+                    <label class="form-label">Comportamento do Assistente</label>
+                    <span class="form-hint">Defina como a IA deve se comportar ao analisar o projeto.</span>
+                    <textarea id="system-prompt" class="form-textarea"
+                        placeholder="Ex: Você é um especialista sênior em desenvolvimento web focado em vendas..."></textarea>
+                </div>
+            </div>
+
+            <div class="section" style="margin-top: 24px;">
+                <div class="section-title">Template da Proposta</div>
+                <div class="form-group">
+                    <label class="form-label">Estrutura Padrão</label>
+                    <span class="form-hint">Use variáveis como {NOME_CLIENTE}, {TITULO_PROJETO}, {TECNOLOGIAS} para
+                        personalizar.</span>
+                    <textarea id="proposal-template" class="form-textarea"
+                        style="height: 300px; font-family: monospace;"
+                        placeholder="Olá {NOME_CLIENTE}, vi seu projeto {TITULO_PROJETO}..."></textarea>
+                </div>
+                <button class="btn btn-secondary" id="reset-template-btn" style="width: auto;">Restaurar Template
+                    Padrão</button>
+            </div>
+        </div>
+
+        <!-- TAB: Negócio -->
+        <div id="business" class="tab-content">
+            <div class="section">
+                <div class="section-title">Ajustes Financeiros</div>
+                <div class="result-grid">
+                    <div class="form-group">
+                        <label class="form-label">Ajuste de Valor (%)</label>
+                        <span class="form-hint">Aumentar ou diminuir o valor sugerido.</span>
+                        <input type="number" id="value-adjustment" class="form-input" value="0" step="5">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ajuste de Prazo (%)</label>
+                        <span class="form-hint">Margem de segurança no prazo.</span>
+                        <input type="number" id="deadline-adjustment" class="form-input" value="0" step="10">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="save-bar">
+            <div id="status-message"
+                style="margin-right: auto; align-self: center; color: var(--success); display: none;">Configurações
+                salvas!</div>
+            <button class="btn btn-primary" id="save-btn" style="width: 200px;">Salvar Configurações</button>
+        </div>
+    </div>
+
+    <script src="options.js"></script>
+</body>
+
+</html>

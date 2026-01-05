@@ -30,9 +30,10 @@ https://calendly.com/techworkydigital/orcamento
  * Constrói o prompt para a OpenAI
  * @param {Object} projectData - Dados do projeto
  * @param {Object} rulesResult - Resultado das regras de negócio
+ * @param {Object} userConfig - Configurações do usuário (systemPrompt, proposalTemplate)
  * @returns {string} - Prompt completo
  */
-function build(projectData, rulesResult) {
+function build(projectData, rulesResult, userConfig = {}) {
     const {
         nomeCliente,
         tituloProjeto,
@@ -52,7 +53,7 @@ function build(projectData, rulesResult) {
         nivelConhecimento
     } = rulesResult;
 
-    const systemPrompt = buildSystemPrompt();
+    const systemPrompt = buildSystemPrompt(userConfig.systemPrompt);
     const userPrompt = buildUserPrompt(
         nomeCliente,
         tituloProjeto,
@@ -76,9 +77,26 @@ function build(projectData, rulesResult) {
 
 /**
  * Constrói o system prompt
+ * @param {string} customPrompt - Prompt personalizado do usuário
  * @returns {string} - System prompt
  */
-function buildSystemPrompt() {
+function buildSystemPrompt(customPrompt) {
+    if (customPrompt && customPrompt.trim().length > 10) {
+        return `${customPrompt}
+
+REGRAS OBRIGATÓRIAS (mantenha independente do seu papel):
+1. Gere APENAS um JSON válido como resposta.
+2. O texto de explicação deve ter no máximo 200 palavras.
+3. NÃO inclua saudações ou despedidas no texto de explicação.
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "textoExplicacao": "Texto da explicação aqui...",
+  "prazo": número em dias (opcional, se quiser sobrescrever),
+  "valor": número em reais (opcional, se quiser sobrescrever)
+}`;
+    }
+
     return `Você é um assistente especializado em criar propostas profissionais para projetos de desenvolvimento web e software.
 
 Sua tarefa é gerar APENAS o texto de explicação do projeto (#TEXTODEEXPLICAÇÃO) que será inserido no template da proposta.
@@ -154,12 +172,35 @@ Responda APENAS com o JSON no formato especificado.`;
  * Monta a proposta final com o texto gerado
  * @param {string} nomeCliente - Nome do cliente
  * @param {string} textoExplicacao - Texto de explicação gerado pela IA
+ * @param {Object} projectData - Dados completos do projeto (para variáveis extras)
+ * @param {Object} rulesResult - Dados da regra (para variáveis extras)
+ * @param {string} customTemplate - Template personalizado
  * @returns {string} - Proposta completa
  */
-function assembleProposal(nomeCliente, textoExplicacao) {
-    return PROPOSAL_TEMPLATE
-        .replace('#NOMEDOCLIENTE', nomeCliente || 'Cliente')
-        .replace('#TEXTODEEXPLICAÇÃO', textoExplicacao);
+function assembleProposal(nomeCliente, textoExplicacao, projectData, rulesResult, customTemplate) {
+    let template = customTemplate || PROPOSAL_TEMPLATE;
+
+    // Variáveis disponíveis
+    const variables = {
+        '#NOMEDOCLIENTE': nomeCliente || 'Cliente',
+        '{NOME_CLIENTE}': nomeCliente || 'Cliente',
+        '#TEXTODEEXPLICAÇÃO': textoExplicacao,
+        '{TEXTO_EXPLICACAO}': textoExplicacao,
+        '{TITULO_PROJETO}': projectData?.tituloProjeto || 'seu projeto',
+        '{STACK_TECNOLOGICA}': rulesResult?.stackRecomendada || 'tecnologias modernas',
+        '{ANALISE_TECNICA}': textoExplicacao, // Alias
+        '{DUVIDA_PERTINENTE}': 'Gostaria de saber mais detalhes sobre o escopo?', // Placeholder simples
+        '{PRAZO}': rulesResult?.prazoSugerido ? `${rulesResult.prazoSugerido} dias` : 'a combinar',
+        '{VALOR}': rulesResult?.valorSugerido ? `R$ ${rulesResult.valorSugerido}` : 'a combinar'
+    };
+
+    // Substituição
+    let proposal = template;
+    for (const [key, value] of Object.entries(variables)) {
+        proposal = proposal.split(key).join(value); // Replace all
+    }
+
+    return proposal;
 }
 
 module.exports = {

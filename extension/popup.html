@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>99Freelas Assistant</title>
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <div class="container">
     <!-- Header -->
@@ -23,6 +25,15 @@
       <span id="status-text" class="status-text">Aguardando...</span>
     </div>
 
+    <!-- Mode Toggle -->
+    <div class="mode-toggle-container">
+      <span class="mode-label">Modo Automático (Widget)</span>
+      <label class="switch">
+        <input type="checkbox" id="mode-toggle">
+        <span class="slider round"></span>
+      </label>
+    </div>
+
     <!-- Error Message -->
     <div id="error-container" class="error-container hidden">
       <span class="error-icon">❌</span>
@@ -32,7 +43,7 @@
     <!-- Project Data Section -->
     <section id="project-section" class="section">
       <h2 class="section-title">📋 Dados do Projeto</h2>
-      
+
       <div id="project-data" class="project-data">
         <div class="data-item">
           <label>Cliente</label>
@@ -70,7 +81,7 @@
     <!-- Analysis Section -->
     <section id="analysis-section" class="section hidden">
       <h2 class="section-title">🤖 Análise IA</h2>
-      
+
       <button id="btn-analyze" class="btn btn-primary">
         <span class="btn-icon">✨</span>
         Analisar Projeto
@@ -139,4 +150,5 @@
 
   <script src="popup.js"></script>
 </body>
+
 </html>

@@ -5,7 +5,8 @@
   "description": "Assistente inteligente para criação de propostas no 99Freelas",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
     "https://www.99freelas.com.br/*",

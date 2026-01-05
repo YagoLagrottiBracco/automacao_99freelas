@@ -71,9 +71,10 @@ const VALUE_DISCOUNT_FACTORS = {
 /**
  * Analisa o projeto e retorna recomendações
  * @param {Object} projectData - Dados do projeto
+ * @param {Object} userConfig - Configurações do usuário (whitelist, blacklist, ajustes)
  * @returns {Object} - Resultado da análise
  */
-function analyze(projectData) {
+function analyze(projectData, userConfig = {}) {
     const {
         descricaoProjeto = '',
         stackMencionada = '',
@@ -81,30 +82,41 @@ function analyze(projectData) {
         prazoInformado
     } = projectData;
 
+    // Default config fallback
+    const config = {
+        whitelist: [],
+        blacklist: [],
+        valueAdjustment: 0,
+        deadlineAdjustment: 0,
+        ...userConfig
+    };
+
     // 1. Classifica o projeto
     const classification = classifier.classify(descricaoProjeto, stackMencionada);
 
-    // 2. Determina a stack recomendada
-    const stackRecommendation = getStackRecommendation(stackMencionada, descricaoProjeto);
+    // 2. Determina a stack recomendada (Considerando whitelist)
+    const stackRecommendation = getStackRecommendation(stackMencionada, descricaoProjeto, config.whitelist);
 
-    // 3. Avalia viabilidade
-    const viability = assessViability(classification, stackMencionada, descricaoProjeto);
+    // 3. Avalia viabilidade (Considerando blacklist)
+    const viability = assessViability(classification, stackMencionada, descricaoProjeto, config.blacklist);
 
-    // 4. Calcula prazo sugerido
+    // 4. Calcula prazo sugerido (Com ajuste percentual)
     const prazoSugerido = calculateDeadline(
         prazoInformado,
         classification.complexity,
-        stackMencionada
+        stackMencionada,
+        config.deadlineAdjustment
     );
 
-    // 5. Calcula valor sugerido
+    // 5. Calcula valor sugerido (Com ajuste percentual)
     const valorSugerido = calculateValue(
         orcamentoInformado,
-        classification.complexity
+        classification.complexity,
+        config.valueAdjustment
     );
 
     // 6. Determina nível de conhecimento
-    const knowledgeLevel = getKnowledgeLevel(stackMencionada);
+    const knowledgeLevel = getKnowledgeLevel(stackMencionada, config.whitelist);
 
     return {
         complexidade: classification.complexity,
@@ -122,11 +134,24 @@ function analyze(projectData) {
  * Obtém recomendação de stack
  * @param {string} stackMencionada - Stack identificada
  * @param {string} descricao - Descrição do projeto
+ * @param {string[]} whitelist - Tags prioritárias do usuário
  * @returns {Object} - Recomendação de stack
  */
-function getStackRecommendation(stackMencionada, descricao) {
+function getStackRecommendation(stackMencionada, descricao, whitelist = []) {
     const stack = stackMencionada.toLowerCase();
     const desc = descricao.toLowerCase();
+
+    // 0. Verifica Whitelist - Se o projeto menciona algo da whitelist, reforça o uso
+    if (whitelist && whitelist.length > 0) {
+        for (const tech of whitelist) {
+            if (stack.includes(tech.toLowerCase()) || desc.includes(tech.toLowerCase())) {
+                return {
+                    stack: tech, // Usa a grafia da whitelist do usuário
+                    suggestion: `Como você domina ${tech}, esta é uma excelente oportunidade para aplicar seu conhecimento.`
+                };
+            }
+        }
+    }
 
     // WordPress → Elementor Pro + Yoast Pro
     if (stack.includes('wordpress') || desc.includes('wordpress')) {
@@ -172,11 +197,21 @@ function getStackRecommendation(stackMencionada, descricao) {
  * @param {Object} classification - Classificação do projeto
  * @param {string} stack - Stack mencionada
  * @param {string} descricao - Descrição do projeto
+ * @param {string[]} blacklist - Lista de tecnologias bloqueadas pelo usuário
  * @returns {string} - Viabilidade
  */
-function assessViability(classification, stack, descricao) {
+function assessViability(classification, stack, descricao, blacklist = []) {
     const desc = descricao.toLowerCase();
     const stackLower = stack.toLowerCase();
+
+    // 1. Verifica tecnologias na BLACKLIST
+    if (blacklist && blacklist.length > 0) {
+        for (const blockedTech of blacklist) {
+            if (stackLower.includes(blockedTech.toLowerCase()) || desc.includes(blockedTech.toLowerCase())) {
+                return 'inviável (blacklist: ' + blockedTech + ')';
+            }
+        }
+    }
 
     // Palavras-chave de projetos inviáveis
     const inviableKeywords = [
@@ -217,9 +252,10 @@ function assessViability(classification, stack, descricao) {
  * @param {number|null} prazoInformado - Prazo informado pelo cliente
  * @param {string} complexidade - Complexidade do projeto
  * @param {string} stack - Stack mencionada
+ * @param {number} adjustmentPercent - Ajuste manual em % (ex: 20 para +20%)
  * @returns {number} - Prazo em dias
  */
-function calculateDeadline(prazoInformado, complexidade, stack) {
+function calculateDeadline(prazoInformado, complexidade, stack, adjustmentPercent = 0) {
     // Prazo base (se não informado, estima baseado na complexidade)
     let prazoBase = prazoInformado;
 
@@ -250,8 +286,11 @@ function calculateDeadline(prazoInformado, complexidade, stack) {
     // Fator de ajuste por complexidade
     const complexityFactor = COMPLEXITY_DEADLINE_FACTORS[complexidade] || 1.0;
 
+    // Fator de ajuste manual do usuário
+    const userFactor = 1 + (adjustmentPercent / 100);
+
     // Calcula prazo final
-    const prazoFinal = Math.ceil(prazoBase * baseAdjustment * stackFactor * complexityFactor);
+    const prazoFinal = Math.ceil(prazoBase * baseAdjustment * stackFactor * complexityFactor * userFactor);
 
     return prazoFinal;
 }
@@ -260,9 +299,10 @@ function calculateDeadline(prazoInformado, complexidade, stack) {
  * Calcula valor sugerido
  * @param {number|null} orcamentoInformado - Orçamento informado pelo cliente
  * @param {string} complexidade - Complexidade do projeto
+ * @param {number} adjustmentPercent - Ajuste manual em %
  * @returns {number} - Valor sugerido
  */
-function calculateValue(orcamentoInformado, complexidade) {
+function calculateValue(orcamentoInformado, complexidade, adjustmentPercent = 0) {
     // Se não há orçamento informado, não podemos calcular
     if (!orcamentoInformado) {
         return null;
@@ -277,8 +317,16 @@ function calculateValue(orcamentoInformado, complexidade) {
     // Desconto final é o mínimo entre base e máximo permitido pela complexidade
     const finalDiscount = Math.min(baseDiscount, discountFactor);
 
-    // Calcula valor final
-    const valorFinal = Math.round(orcamentoInformado * (1 - finalDiscount));
+    // Valor base com desconto
+    let valorBase = orcamentoInformado * (1 - finalDiscount);
+
+    // Aplica ajuste manual do usuário (pode aumentar ou diminuir)
+    if (adjustmentPercent !== 0) {
+        valorBase = valorBase * (1 + (adjustmentPercent / 100));
+    }
+
+    // Calcula valor final arredondado
+    const valorFinal = Math.round(valorBase);
 
     return valorFinal;
 }
@@ -286,10 +334,18 @@ function calculateValue(orcamentoInformado, complexidade) {
 /**
  * Obtém nível de conhecimento para a stack
  * @param {string} stack - Stack mencionada
+ * @param {string[]} whitelist - Tags prioritárias
  * @returns {string} - Nível de conhecimento
  */
-function getKnowledgeLevel(stack) {
+function getKnowledgeLevel(stack, whitelist = []) {
     const stackLower = stack.toLowerCase();
+
+    // Se estiver na whitelist, é expert
+    if (whitelist && whitelist.length > 0) {
+        if (whitelist.some(tech => stackLower.includes(tech.toLowerCase()))) {
+            return 'especialista';
+        }
+    }
 
     for (const [key, level] of Object.entries(TECHNICAL_KNOWLEDGE)) {
         if (stackLower.includes(key.toLowerCase())) {

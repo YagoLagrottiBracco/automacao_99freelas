@@ -18,7 +18,7 @@ const openaiService = require('../services/openai.service');
  */
 router.post('/analyze', async (req, res, next) => {
     try {
-        const projectData = req.body;
+        const { userConfig, ...projectData } = req.body;
 
         // Validação básica
         if (!projectData || !projectData.tituloProjeto) {
@@ -28,9 +28,12 @@ router.post('/analyze', async (req, res, next) => {
         }
 
         console.log('\n📋 Analisando projeto:', projectData.tituloProjeto);
+        if (userConfig) {
+            console.log('⚙️ Usando configurações personalizadas do usuário');
+        }
 
-        // 1. Aplica regras de negócio
-        const rulesResult = rulesEngine.analyze(projectData);
+        // 1. Aplica regras de negócio (com config do usuário)
+        const rulesResult = rulesEngine.analyze(projectData, userConfig);
         console.log('📊 Resultado das regras:', JSON.stringify(rulesResult, null, 2));
 
         // 2. Verifica viabilidade antes de chamar a IA
@@ -45,17 +48,29 @@ router.post('/analyze', async (req, res, next) => {
             });
         }
 
-        // 3. Constrói o prompt
-        const prompt = promptBuilder.build(projectData, rulesResult);
+        // 3. Constrói o prompt (com config do usuário)
+        const prompt = promptBuilder.build(projectData, rulesResult, userConfig);
         console.log('📝 Prompt construído');
 
         // 4. Chama a OpenAI
         const aiResponse = await openaiService.generateProposal(prompt);
         console.log('🤖 Resposta da IA recebida');
 
-        // 5. Monta resposta final
+        // 5. Monta resposta final (com template do usuário)
+        // Se houver template personalizado, usamos o assemble da nova versão
+        // Caso contrário, a IA retorna o textoExplicacao e só isso basta para o frontend antigo
+        // MAS: O frontend espera 'textoProposta' completo.
+
+        const finalProposalText = promptBuilder.assembleProposal(
+            projectData.nomeCliente,
+            aiResponse.textoProposta,
+            projectData,
+            rulesResult,
+            userConfig?.proposalTemplate
+        );
+
         const response = {
-            textoProposta: aiResponse.textoProposta,
+            textoProposta: finalProposalText,
             prazo: aiResponse.prazo || rulesResult.prazoSugerido,
             valor: aiResponse.valor || rulesResult.valorSugerido,
             complexidade: rulesResult.complexidade,

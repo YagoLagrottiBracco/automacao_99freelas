@@ -60,7 +60,10 @@
         btnExtract: document.getElementById('btn-extract'),
         btnAnalyze: document.getElementById('btn-analyze'),
         btnFill: document.getElementById('btn-fill'),
-        btnCopy: document.getElementById('btn-copy')
+        btnCopy: document.getElementById('btn-copy'),
+
+        // Toggle
+        modeToggle: document.getElementById('mode-toggle')
     };
 
     /**
@@ -213,12 +216,20 @@
             elements.loadingContainer.classList.remove('hidden');
             elements.btnAnalyze.disabled = true;
 
+            // Carrega configuração do usuário
+            const userConfig = await new Promise(resolve => {
+                chrome.storage.local.get(['userConfig'], (result) => resolve(result.userConfig || {}));
+            });
+
             const response = await fetch(`${CONFIG.backendUrl}${CONFIG.endpoints.analyze}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(state.projectData)
+                body: JSON.stringify({
+                    ...state.projectData,
+                    userConfig
+                })
             });
 
             if (!response.ok) {
@@ -371,6 +382,30 @@
         elements.btnAnalyze.addEventListener('click', analyzeProject);
         elements.btnFill.addEventListener('click', fillProposalForm);
         elements.btnCopy.addEventListener('click', copyProposalText);
+
+        // Toggle Listener
+        if (elements.modeToggle) {
+            elements.modeToggle.addEventListener('change', (e) => {
+                const autoMode = e.target.checked;
+                chrome.storage.local.set({ autoMode }, () => {
+                    // Opcional: Notificar content script diretamente se necessário, 
+                    // mas o storage.onChanged no content script deve lidar com isso.
+                });
+            });
+        }
+    }
+
+    /**
+     * Carrega configurações salvas
+     */
+    function loadSettings() {
+        chrome.storage.local.get(['autoMode'], (result) => {
+            // Default to true (automático) se não definido
+            const autoMode = result.autoMode !== false;
+            if (elements.modeToggle) {
+                elements.modeToggle.checked = autoMode;
+            }
+        });
     }
 
     /**
@@ -391,6 +426,7 @@
     // Inicialização
     document.addEventListener('DOMContentLoaded', () => {
         initEventListeners();
+        loadSettings();
         checkValidPage();
     });
 })();

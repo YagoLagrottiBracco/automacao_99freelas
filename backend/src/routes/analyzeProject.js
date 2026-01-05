@@ -16,9 +16,30 @@ const openaiService = require('../services/openai.service');
  * 
  * Recebe dados do projeto e retorna proposta estruturada
  */
-router.post('/analyze', async (req, res, next) => {
+const accessService = require('../services/access.service');
+const authMiddleware = require('../middlewares/auth.middleware');
+
+/**
+ * POST /api/analyze
+ * 
+ * Recebe dados do projeto e retorna proposta estruturada
+ */
+router.post('/analyze', authMiddleware, async (req, res, next) => {
     try {
         const { userConfig, ...projectData } = req.body;
+        const userId = req.user.id; // Vem do authMiddleware
+
+        // 0. Verifica Acesso (Trial / Assinatura)
+        const accessParams = await accessService.checkAccess(userId);
+
+        if (!accessParams.allowed) {
+            return res.status(403).json({
+                error: 'Limite de avaliações gratuitas excedido.',
+                code: 'LIMIT_REACHED',
+                limit: accessParams.limit,
+                upgradeUrl: 'https://sua-url-de-upgrade.com' // Pode ser configurado
+            });
+        }
 
         // Validação básica
         if (!projectData || !projectData.tituloProjeto) {
@@ -79,6 +100,10 @@ router.post('/analyze', async (req, res, next) => {
         };
 
         console.log('✅ Análise concluída com sucesso');
+
+        // Registra o uso (desconta do trial)
+        await accessService.logUsage(userId, projectData.tituloProjeto);
+
         res.json(response);
 
     } catch (error) {

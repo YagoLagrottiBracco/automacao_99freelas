@@ -8,7 +8,6 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const analyzeProjectRoute = require('./routes/analyzeProject');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

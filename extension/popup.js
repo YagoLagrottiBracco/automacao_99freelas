@@ -216,15 +216,19 @@
             elements.loadingContainer.classList.remove('hidden');
             elements.btnAnalyze.disabled = true;
 
-            // Carrega configuração do usuário
-            const userConfig = await new Promise(resolve => {
-                chrome.storage.local.get(['userConfig'], (result) => resolve(result.userConfig || {}));
+            // Carrega auth token e userConfig
+            const storageData = await new Promise(resolve => {
+                chrome.storage.local.get(['userConfig', 'session'], (result) => resolve(result));
             });
+
+            const userConfig = storageData.userConfig || {};
+            const token = storageData.session?.access_token;
 
             const response = await fetch(`${CONFIG.backendUrl}${CONFIG.endpoints.analyze}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     ...state.projectData,

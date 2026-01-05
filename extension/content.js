@@ -663,13 +663,24 @@
         </div>
       `);
 
-      const userConfig = await new Promise(resolve => {
-        chrome.storage.local.get(['userConfig'], (result) => resolve(result.userConfig || {}));
+      const storageData = await new Promise(resolve => {
+        chrome.storage.local.get(['userConfig', 'session'], (result) => resolve(result));
       });
+
+      const userConfig = storageData.userConfig || {};
+      const token = storageData.session?.access_token;
+
+      // Se não tiver token, talvez devesse avisar no widget, mas por enquanto falha no backend
+      if (!token) {
+        console.warn('Bot: Usuário não autenticado. Automação pode falhar.');
+      }
 
       const response = await fetch(`${CONFIG.backendUrl}${CONFIG.endpoints.analyze}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...state.projectData,
           userConfig

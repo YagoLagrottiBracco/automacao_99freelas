@@ -9,7 +9,7 @@
   ],
   "host_permissions": [
     "https://www.99freelas.com.br/*",
-    "http://localhost:3000/*"
+    "https://automacao-99freelas.onrender.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -21,8 +21,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.99freelas.com.br/project/*"],
-      "js": ["content.js"],
+      "matches": [
+        "https://www.99freelas.com.br/project/*"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],

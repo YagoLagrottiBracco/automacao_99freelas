@@ -14,7 +14,7 @@
 
   // Configurações
   const CONFIG = {
-    backendUrl: 'http://localhost:3000',
+    backendUrl: 'https://automacao-99freelas.onrender.com',
     endpoints: {
       analyze: '/api/analyze'
     },
@@ -699,7 +699,7 @@
 
       let errorMsg = error.message;
       if (error.message.includes('Failed to fetch')) {
-        errorMsg = 'Backend não está rodando. Inicie com: npm start';
+        errorMsg = 'Backend não está rodando.';
       }
 
       updateWidget(`

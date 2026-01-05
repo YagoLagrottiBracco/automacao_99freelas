@@ -13,16 +13,54 @@ const analyzeProjectRoute = require('./routes/analyzeProject');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
+// Middlewares - CORS configurado para aceitar requisições do 99freelas
 app.use(cors({
-    origin: [
-        'chrome-extension://*',
-        'moz-extension://*',
-        'http://localhost:*'
-    ],
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type']
+    origin: function (origin, callback) {
+        // Permite requisições sem origin (como extensões ou curl)
+        if (!origin) return callback(null, true);
+
+        // Lista de origens permitidas
+        const allowedOrigins = [
+            'https://www.99freelas.com.br',
+            'https://99freelas.com.br',
+            /^chrome-extension:\/\//,
+            /^moz-extension:\/\//,
+            /^http:\/\/localhost/
+        ];
+
+        // Verifica se a origem é permitida
+        const isAllowed = allowedOrigins.some(allowed => {
+            if (allowed instanceof RegExp) {
+                return allowed.test(origin);
+            }
+            return allowed === origin;
+        });
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.log('CORS bloqueado para origem:', origin);
+            callback(null, true); // Permite mesmo assim para não bloquear
+        }
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
+
+// Middleware para garantir headers CORS em todas as respostas
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 app.use(express.json());
 

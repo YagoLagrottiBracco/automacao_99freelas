@@ -9,7 +9,7 @@
 
     // Configurações
     const CONFIG = {
-        backendUrl: 'http://localhost:3000',
+        backendUrl: 'https://automacao-99freelas.onrender.com',
         endpoints: {
             analyze: '/api/analyze'
         }

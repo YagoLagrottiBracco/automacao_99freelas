@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>99Freelas Assistant</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🚀</span>
+        <h1>99Freelas Assistant</h1>
+      </div>
+      <span class="version">v1.0</span>
+    </header>
+
+    <!-- Status Bar -->
+    <div id="status-bar" class="status-bar hidden">
+      <span id="status-icon" class="status-icon">⏳</span>
+      <span id="status-text" class="status-text">Aguardando...</span>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-container" class="error-container hidden">
+      <span class="error-icon">❌</span>
+      <span id="error-message" class="error-message"></span>
+    </div>
+
+    <!-- Project Data Section -->
+    <section id="project-section" class="section">
+      <h2 class="section-title">📋 Dados do Projeto</h2>
+      
+      <div id="project-data" class="project-data">
+        <div class="data-item">
+          <label>Cliente</label>
+          <span id="cliente-name">-</span>
+        </div>
+        <div class="data-item">
+          <label>Título</label>
+          <span id="project-title">-</span>
+        </div>
+        <div class="data-item">
+          <label>Stack</label>
+          <span id="project-stack">-</span>
+        </div>
+        <div class="data-item">
+          <label>Orçamento</label>
+          <span id="project-budget">-</span>
+        </div>
+        <div class="data-item">
+          <label>Prazo</label>
+          <span id="project-deadline">-</span>
+        </div>
+      </div>
+
+      <div id="project-description-container" class="description-container hidden">
+        <label>Descrição</label>
+        <p id="project-description" class="description-text"></p>
+      </div>
+
+      <button id="btn-extract" class="btn btn-primary">
+        <span class="btn-icon">🔍</span>
+        Extrair Dados
+      </button>
+    </section>
+
+    <!-- Analysis Section -->
+    <section id="analysis-section" class="section hidden">
+      <h2 class="section-title">🤖 Análise IA</h2>
+      
+      <button id="btn-analyze" class="btn btn-primary">
+        <span class="btn-icon">✨</span>
+        Analisar Projeto
+      </button>
+
+      <div id="loading-container" class="loading-container hidden">
+        <div class="spinner"></div>
+        <span>Analisando com IA...</span>
+      </div>
+    </section>
+
+    <!-- Result Section -->
+    <section id="result-section" class="section hidden">
+      <h2 class="section-title">📝 Resultado</h2>
+
+      <div class="result-grid">
+        <div class="result-card">
+          <span class="result-label">Complexidade</span>
+          <span id="result-complexity" class="result-value badge">-</span>
+        </div>
+        <div class="result-card">
+          <span class="result-label">Viabilidade</span>
+          <span id="result-viability" class="result-value badge">-</span>
+        </div>
+        <div class="result-card">
+          <span class="result-label">Valor Sugerido</span>
+          <span id="result-value" class="result-value money">-</span>
+        </div>
+        <div class="result-card">
+          <span class="result-label">Prazo Sugerido</span>
+          <span id="result-deadline" class="result-value time">-</span>
+        </div>
+      </div>
+
+      <div class="proposal-preview">
+        <label>Prévia da Proposta</label>
+        <div id="proposal-preview" class="proposal-text"></div>
+      </div>
+
+      <div class="action-buttons">
+        <button id="btn-fill" class="btn btn-success">
+          <span class="btn-icon">📝</span>
+          Preencher Proposta
+        </button>
+        <button id="btn-copy" class="btn btn-secondary">
+          <span class="btn-icon">📋</span>
+          Copiar Texto
+        </button>
+      </div>
+    </section>
+
+    <!-- Skip Message -->
+    <section id="skip-section" class="section skip-section hidden">
+      <div class="skip-content">
+        <span class="skip-icon">⚠️</span>
+        <h3>Este projeto você pula.</h3>
+        <p>A análise indicou que este projeto não é viável.</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>Desenvolvido por <a href="https://lagrotti.dev" target="_blank">Lagrotti</a></span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

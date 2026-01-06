@@ -18,14 +18,11 @@
     endpoints: {
       analyze: '/api/analyze'
     },
-    selectors: {
-      projectTitle: 'h1.projeto-titulo',
-      clientName: '.box-img-info .img-info .text .title a',
-      projectDescription: '.projeto-detalhes',
-      projectDescriptionAlt: '.box-detalhes .detalhes',
-      projectStats: '.box-stats ul li', // Lista com orçam, prazo, propostas
-      projectStack: '.box-habilidades ul li a' // Lista de skills
+    endpoints: {
+      analyze: '/api/analyze',
+      selectors: '/api/config/selectors'
     },
+    // Removido selectors hardcoded daqui, será carregado dinamicamente
     autoRun: true, // Default, será atualizado pelo storage
     autoFill: true,
     showWidget: true, // Default, será atualizado pelo storage
@@ -36,8 +33,11 @@
   /**
    * Função principal de inicialização
    */
-  function init() {
+  async function init() {
     console.log('99Freelas Proposal Assistant - Init (AutoMode: ' + CONFIG.autoRun + ')');
+
+    // Carrega seletores antes de qualquer coisa
+    await fetchSelectors();
 
     if (CONFIG.autoRun && isProjectPage()) {
       // Aguarda um pouco para garantir que a página está totalmente carregada
@@ -89,23 +89,62 @@
   /**
    * Seletores CSS para extração de dados - BASEADOS NO HTML REAL DO 99FREELAS
    */
-  const SELECTORS = {
-    // Dados do projeto
+  /**
+   * Seletores CSS (serão populados via API ou cache)
+   */
+  let SELECTORS = {
+    // Fallback inicial se API falhar
     clientName: '.info-usuario.cliente .info-usuario-nome a span.name',
-    projectTitle: 'h1.title .nome-projeto, .box-project-info-container-header h1.title .nome-projeto',
-    projectDescription: '.item-text.project-description, .project-description.formatted-text',
-
-    // Informações adicionais (tabela)
+    projectTitle: 'h1.title .nome-projeto',
+    projectDescription: '.item-text.project-description',
     infoTable: '.info-adicionais table',
-
-    // Valores médios (na div.information)
     averageInfo: '.generic.information',
-
-    // Formulário de proposta
-    proposalTextarea: '#proposta, textarea#proposta',
-    proposalValue: '#oferta, input#oferta',
-    proposalDeadline: '#duracao-estimada, input#duracao-estimada'
+    proposalTextarea: '#proposta',
+    proposalValue: '#oferta',
+    proposalDeadline: '#duracao-estimada'
   };
+
+  /**
+   * Busca seletores da API ou Cache
+   */
+  async function fetchSelectors() {
+    try {
+      // 1. Tenta pegar do cache local
+      const cached = await new Promise(resolve =>
+        chrome.storage.local.get(['selectors', 'selectorsTimestamp'], resolve)
+      );
+
+      const now = Date.now();
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      if (cached.selectors && cached.selectorsTimestamp && (now - cached.selectorsTimestamp < oneDay)) {
+        console.log('Usando seletores do cache');
+        SELECTORS = { ...SELECTORS, ...cached.selectors };
+        return;
+      }
+
+      // 2. Se não tem cache ou expirou, busca da API
+      console.log('Buscando seletores da API...');
+      const response = await fetch(`${CONFIG.backendUrl}${CONFIG.endpoints.selectors}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.selectors) {
+          SELECTORS = { ...SELECTORS, ...data.selectors };
+
+          // Salva no cache
+          chrome.storage.local.set({
+            selectors: data.selectors,
+            selectorsTimestamp: now
+          });
+          console.log('Seletores atualizados com sucesso');
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar seletores:', error);
+      // Mantém os fallbacks ou cache anterior se der erro
+    }
+  }
 
   // Estado da extensão
   let state = {

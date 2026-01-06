@@ -170,12 +170,43 @@
         <!-- TAB: Perfil & Tech -->
         <div id="profile" class="tab-content active">
             <div class="section">
-                <div class="section-title">Minhas Tecnologias (Whitelist)</div>
+                <div class="section-title">Perfil Profissional</div>
                 <div class="form-group">
-                    <span class="form-hint">Tecnologias que você domina. A IA dará preferência e destaque para projetos
-                        que usem essas stacks. Digite e pressione Enter.</span>
+                    <label class="form-label">Qual sua área de atuação?</label>
+                    <span class="form-hint">Isso adaptará a IA para buscar termos relevantes à sua área.</span>
+                    <select id="user-role" class="form-input">
+                        <option value="developer">Desenvolvedor (Web/Mobile/Software)</option>
+                        <option value="copywriter">Redator / Copywriter</option>
+                        <option value="designer">Designer (UI/UX/Gráfico)</option>
+                        <option value="translator">Tradutor</option>
+                        <option value="marketing">Marketing Digital / Gestor de Tráfego</option>
+                        <option value="other">Outro</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section" style="margin-top: 24px;">
+                <div class="section-title">Links & Portfolio</div>
+                <div class="form-group">
+                    <label class="form-label">Link do Portfolio</label>
+                    <input type="text" id="link-portfolio" class="form-input" placeholder="https://seu-site.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Link do LinkedIn</label>
+                    <input type="text" id="link-linkedin" class="form-input" placeholder="https://linkedin.com/in/voce">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Link de Agendamento (Calendly/Whatsapp)</label>
+                    <input type="text" id="link-meeting" class="form-input" placeholder="https://calendly.com/voce">
+                </div>
+            </div>
+
+            <div class="section" style="margin-top: 24px;">
+                <div class="section-title">Minhas Habilidades (Palavras-Chave)</div>
+                <div class="form-group">
+                    <span class="form-hint">Adicione termos chave da sua área. Ex: SEO, Photoshop, Python. Digite e pressione Enter.</span>
                     <div class="tags-input-container" id="whitelist-container">
-                        <input type="text" class="tags-input" placeholder="Ex: React, Node.js, Python..."
+                        <input type="text" class="tags-input" placeholder="Adicionar habilidade..."
                             id="whitelist-input">
                     </div>
                 </div>

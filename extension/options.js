@@ -9,7 +9,13 @@ const DEFAULT_CONFIG = {
     systemPrompt: '',
     proposalTemplate: '',
     valueAdjustment: 0,
-    deadlineAdjustment: 0
+    deadlineAdjustment: 0,
+    userRole: 'developer',
+    links: {
+        portfolio: '',
+        linkedin: '',
+        meeting: ''
+    }
 };
 
 const DEFAULT_TEMPLATE = `Olá, tudo bem?
@@ -42,7 +48,12 @@ const elements = {
     resetTemplateBtn: document.getElementById('reset-template-btn'),
     statusMessage: document.getElementById('status-message'),
     tabs: document.querySelectorAll('.tab-btn'),
-    tabContents: document.querySelectorAll('.tab-content')
+    tabContents: document.querySelectorAll('.tab-content'),
+    // New fields
+    userRole: document.getElementById('user-role'),
+    linkPortfolio: document.getElementById('link-portfolio'),
+    linkLinkedin: document.getElementById('link-linkedin'),
+    linkMeeting: document.getElementById('link-meeting')
 };
 
 // Inicialização
@@ -130,6 +141,14 @@ function saveOptions() {
     config.valueAdjustment = parseInt(elements.valueAdjustment.value) || 0;
     config.deadlineAdjustment = parseInt(elements.deadlineAdjustment.value) || 0;
 
+    // New fields
+    config.userRole = elements.userRole.value;
+    config.links = {
+        portfolio: elements.linkPortfolio.value,
+        linkedin: elements.linkLinkedin.value,
+        meeting: elements.linkMeeting.value
+    };
+
     chrome.storage.local.set({ userConfig: config }, () => {
         showStatus('Configurações salvas com sucesso!');
     });
@@ -153,6 +172,14 @@ function restoreOptions() {
         elements.proposalTemplate.value = config.proposalTemplate || DEFAULT_TEMPLATE; // Usa default se vazio
         elements.valueAdjustment.value = config.valueAdjustment;
         elements.deadlineAdjustment.value = config.deadlineAdjustment;
+
+        // New fields
+        if (config.userRole) elements.userRole.value = config.userRole;
+        if (config.links) {
+            elements.linkPortfolio.value = config.links.portfolio || '';
+            elements.linkLinkedin.value = config.links.linkedin || '';
+            elements.linkMeeting.value = config.links.meeting || '';
+        }
     });
 }
 

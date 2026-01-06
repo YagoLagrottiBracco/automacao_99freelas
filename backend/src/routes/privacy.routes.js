@@ -25,7 +25,7 @@ router.get('/privacy-policy', (req, res) => {
     <body>
         <h1>Política de Privacidade</h1>
         
-        <p>A sua privacidade é importante para nós. É política do 99Freelas Extension respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar no site <a href="http://localhost:3000">99Freelas Extension</a>, e outros sites que possuímos e operamos.</p>
+        <p>A sua privacidade é importante para nós. É política do 99Freelas Extension respeitar a sua privacidade em relação a qualquer informação sua que possamos coletar no site <a href="https://automacao-99freelas.onrender.com">99Freelas Extension</a>, e outros sites que possuímos e operamos.</p>
         
         <h2>1. Informações que Coletamos</h2>
         <p>Solicitamos informações pessoais apenas quando realmente precisamos delas para lhe fornecer um serviço. Fazemo-lo por meios justos e legais, com o seu conhecimento e consentimento. Também informamos por que estamos coletando e como será usado.</p>

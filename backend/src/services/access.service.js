@@ -52,14 +52,31 @@ async function checkAccess(userId) {
 /**
  * Registra o uso de uma geração
  * @param {string} userId 
- * @param {string} projectTitle 
+ * @param {Object} projectData 
+ * @param {Object} proposalResult 
  */
-async function logUsage(userId, projectTitle) {
+async function logUsage(userId, projectData, proposalResult) {
+    // Extrai dados seguros para log
+    const {
+        tituloProjeto,
+        urlProjeto
+    } = projectData;
+
+    const {
+        textoProposta,
+        valor,
+        prazo
+    } = proposalResult || {};
+
     const { error } = await supabase
         .from('usage_logs')
         .insert({
             user_id: userId,
-            project_title: projectTitle
+            project_title: tituloProjeto,
+            project_url: urlProjeto,
+            proposal_text: textoProposta,
+            proposal_value: valor,
+            proposal_deadline: prazo
         });
 
     if (error) {

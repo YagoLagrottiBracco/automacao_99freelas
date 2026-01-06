@@ -14,14 +14,14 @@ const PROPOSAL_TEMPLATE = `{i}{b}Olá{/b}, {u}#NOMEDOCLIENTE{/u}, tudo bem? Espe
 {/code}
 
 {pre}
-Sou freelancer em tempo integral e estou disponível para atender suas demandas a qualquer momento. Tenho experiência em diversas áreas do desenvolvimento e estou pronto para ajudar no seu projeto.
+Sou freelancer dedicado e estou disponível para atender suas demandas com agilidade e qualidade. Tenho experiência prática nas habilidades necessárias para o seu projeto.
 
 {i}Confira meu portfólio:{/i}
-{q}https://lagrotti.dev{/q}
-{q}https://www.linkedin.com/in/yago-lagrotti-bracco{/q}
+{q}{LINK_PORTFOLIO}{/q}
+{q}{LINK_LINKEDIN}{/q}
 
 {i}Agende uma reunião comigo para conversarmos sobre o seu projeto:{/i}
-https://calendly.com/techworkydigital/orcamento
+{LINK_MEETING}
 
 {i}Fico no aguardo do seu retorno. Desde já, {b}muito obrigado!{/b}{/i}
 {/pre}`;
@@ -53,7 +53,7 @@ function build(projectData, rulesResult, userConfig = {}) {
         nivelConhecimento
     } = rulesResult;
 
-    const systemPrompt = buildSystemPrompt(userConfig.systemPrompt);
+    const systemPrompt = buildSystemPrompt(userConfig.systemPrompt, userConfig.userRole);
     const userPrompt = buildUserPrompt(
         nomeCliente,
         tituloProjeto,
@@ -78,43 +78,50 @@ function build(projectData, rulesResult, userConfig = {}) {
 /**
  * Constrói o system prompt
  * @param {string} customPrompt - Prompt personalizado do usuário
+ * @param {string} userRole - Papel profissional do usuário (developer, copywriter, etc)
  * @returns {string} - System prompt
  */
-function buildSystemPrompt(customPrompt) {
+function buildSystemPrompt(customPrompt, userRole = 'developer') {
     if (customPrompt && customPrompt.trim().length > 10) {
         return `${customPrompt}
 
-REGRAS OBRIGATÓRIAS (mantenha independente do seu papel):
-1. Gere APENAS um JSON válido como resposta.
-2. O texto de explicação deve ter no máximo 200 palavras.
-3. NÃO inclua saudações ou despedidas no texto de explicação.
+REGRAS OBRIGATÓRIAS:
+1. Gere APENAS um JSON válido.
+2. Explicação máx 200 palavras.
+3. SEM saudações no texto da explicação.
 
-FORMATO DE RESPOSTA (JSON):
-{
-  "textoExplicacao": "Texto da explicação aqui...",
-  "duvidaPertinente": "Uma pergunta técnica ou estratégica relevante sobre o projeto...",
-  "prazo": número em dias (opcional, se quiser sobrescrever),
-  "valor": número em reais (opcional, se quiser sobrescrever)
-}`;
+RESPOSTA (JSON):
+{ "textoExplicacao": "...", "duvidaPertinente": "...", "prazo": 10, "valor": 1000 }`;
     }
 
-    return `Você é um assistente especializado em criar propostas profissionais para projetos de desenvolvimento web e software.
+    const roles = {
+        'developer': 'desenvolvimento de software e web',
+        'copywriter': 'redação, copywriting e produção de conteúdo',
+        'designer': 'design gráfico, UI/UX e identidade visual',
+        'translator': 'tradução e localização de conteúdo',
+        'marketing': 'marketing digital, gestão de tráfego e growth',
+        'other': 'serviços freelance'
+    };
+
+    const area = roles[userRole] || roles['other'];
+
+    return `Você é um assistente especializado em criar propostas comerciais persuasivas para freelancers de ${area}.
 
 Sua tarefa é gerar:
-1. O texto de explicação do projeto (#TEXTODEEXPLICAÇÃO) que será inserido no template da proposta.
+1. O texto de explicação do projeto (#TEXTODEEXPLICAÇÃO) que será inserido no corpo da proposta.
 2. Uma dúvida pertinente ({DUVIDA_PERTINENTE}) para engajar o cliente.
 
-REGRAS IMPORTANTES:
-1. O texto explicação deve ser profissional, objetivo e personalizado
-2. A dúvida deve ser técnica ou de negócio, demonstrando que você pensou na solução
-3. NÃO inclua saudações ou despedidas no texto de explicação (já estão no template)
+REGRAS:
+1. O texto deve ser profissional, persuasivo e focado na solução do problema do cliente.
+2. Demonstre autoridade na área de ${area}.
+3. NÃO inclua saudações ou despedidas (já estão no template).
 
-FORMATO DE RESPOSTA (JSON):
+RESPOSTA (JSON):
 {
   "textoExplicacao": "Texto da explicação aqui...",
-  "duvidaPertinente": "Uma pergunta técnica ou estratégica relevante sobre o projeto...",
-  "prazo": número em dias,
-  "valor": número em reais (ou null se não aplicável)
+  "duvidaPertinente": "Pergunta estratégica...",
+  "prazo": número (dias),
+  "valor": número (reais) ou null
 }`;
 }
 
@@ -177,7 +184,7 @@ Responda APENAS com o JSON no formato especificado.`;
  * @param {string} duvidaPertinente - Dúvida gerada pela IA
  * @returns {string} - Proposta completa
  */
-function assembleProposal(nomeCliente, textoExplicacao, projectData, rulesResult, customTemplate, duvidaPertinente) {
+function assembleProposal(nomeCliente, textoExplicacao, projectData, rulesResult, customTemplate, duvidaPertinente, userConfig = {}) {
     let template = customTemplate || PROPOSAL_TEMPLATE;
 
     // Variáveis disponíveis
@@ -191,7 +198,10 @@ function assembleProposal(nomeCliente, textoExplicacao, projectData, rulesResult
         '{ANALISE_TECNICA}': textoExplicacao, // Alias
         '{DUVIDA_PERTINENTE}': duvidaPertinente || 'Gostaria de saber mais detalhes sobre o escopo?',
         '{PRAZO}': rulesResult?.prazoSugerido ? `${rulesResult.prazoSugerido} dias` : 'a combinar',
-        '{VALOR}': rulesResult?.valorSugerido ? `R$ ${rulesResult.valorSugerido}` : 'a combinar'
+        '{VALOR}': rulesResult?.valorSugerido ? `R$ ${rulesResult.valorSugerido}` : 'a combinar',
+        '{LINK_PORTFOLIO}': userConfig?.links?.portfolio || 'https://meu-portfolio.com',
+        '{LINK_LINKEDIN}': userConfig?.links?.linkedin || 'https://linkedin.com',
+        '{LINK_MEETING}': userConfig?.links?.meeting || 'Link para reunião a combinar'
     };
 
     // Substituição

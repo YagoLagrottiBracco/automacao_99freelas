@@ -11,9 +11,15 @@
 
 const classifier = require('../utils/classifier');
 
-/**
- * Conhecimento técnico do freelancer
- */
+// Mapeamento de papéis e suas configurações padrão
+const ROLE_CONFIGS = {
+    'developer': { labels: 'Tecnologias', defaultStack: 'React + Node.js' },
+    'copywriter': { labels: 'Habilidades de Escrita', defaultStack: 'SEO + Copywriting' },
+    'designer': { labels: 'Ferramentas de Design', defaultStack: 'Figma + Adobe Suite' },
+    'translator': { labels: 'Idiomas', defaultStack: 'Tradução Profissional' },
+    'marketing': { labels: 'Skills de Marketing', defaultStack: 'Gestão de Tráfego + Growth' },
+    'other': { labels: 'Habilidades', defaultStack: 'Minhas Habilidades' }
+};
 const TECHNICAL_KNOWLEDGE = {
     'PHP': 'alto',
     'Laravel': 'alto',
@@ -95,7 +101,7 @@ function analyze(projectData, userConfig = {}) {
     const classification = classifier.classify(descricaoProjeto, stackMencionada);
 
     // 2. Determina a stack recomendada (Considerando whitelist)
-    const stackRecommendation = getStackRecommendation(stackMencionada, descricaoProjeto, config.whitelist);
+    const stackRecommendation = getStackRecommendation(stackMencionada, descricaoProjeto, config);
 
     // 3. Avalia viabilidade (Considerando blacklist)
     const viability = assessViability(classification, stackMencionada, descricaoProjeto, config.blacklist);
@@ -118,6 +124,12 @@ function analyze(projectData, userConfig = {}) {
     // 6. Determina nível de conhecimento
     const knowledgeLevel = getKnowledgeLevel(stackMencionada, config.whitelist);
 
+    // Ajusta complexidade baseada na stack desconhecida
+    if (knowledgeLevel === 'básico' && classification.complexity === 'complexo') {
+        // Se a complexidade for alta e o conhecimento básico, alerta na viabilidade
+        // Mas a função assessViability já cuida disso parcialmente.
+    }
+
     return {
         complexidade: classification.complexity,
         viabilidade: viability,
@@ -131,64 +143,67 @@ function analyze(projectData, userConfig = {}) {
 }
 
 /**
- * Obtém recomendação de stack
- * @param {string} stackMencionada - Stack identificada
+ * Obtém recomendação de stack/habilidade
+ * @param {string} stackMencionada - Stack identificada no projeto
  * @param {string} descricao - Descrição do projeto
- * @param {string[]} whitelist - Tags prioritárias do usuário
+ * @param {Object} config - Configurações do usuário
  * @returns {Object} - Recomendação de stack
  */
-function getStackRecommendation(stackMencionada, descricao, whitelist = []) {
-    const stack = stackMencionada.toLowerCase();
-    const desc = descricao.toLowerCase();
+function getStackRecommendation(stackMencionada, descricao, config = {}) {
+    const stack = (stackMencionada || '').toLowerCase();
+    const desc = (descricao || '').toLowerCase();
+    const whitelist = config.whitelist || [];
+    const userRole = config.userRole || 'developer';
+    const roleConfig = ROLE_CONFIGS[userRole] || ROLE_CONFIGS['other'];
 
-    // 0. Verifica Whitelist - Se o projeto menciona algo da whitelist, reforça o uso
+    // 0. Verifica Whitelist (Prioridade Máxima)
     if (whitelist && whitelist.length > 0) {
-        for (const tech of whitelist) {
+        // Ordena por tamanho da string para pegar a "stack" mais específica primeiro
+        const sortedWhitelist = [...whitelist].sort((a, b) => b.length - a.length);
+
+        for (const tech of sortedWhitelist) {
             if (stack.includes(tech.toLowerCase()) || desc.includes(tech.toLowerCase())) {
                 return {
-                    stack: tech, // Usa a grafia da whitelist do usuário
-                    suggestion: `Como você domina ${tech}, esta é uma excelente oportunidade para aplicar seu conhecimento.`
+                    stack: tech, // Usa a grafia definida pelo usuário
+                    suggestion: `Como você domina ${tech}, esta é uma excelente oportunidade.`
                 };
             }
         }
     }
 
-    // WordPress → Elementor Pro + Yoast Pro
-    if (stack.includes('wordpress') || desc.includes('wordpress')) {
-        return {
-            stack: 'WordPress',
-            suggestion: 'Utilizarei Elementor Pro para o desenvolvimento visual e Yoast Pro para SEO, ambos sem custo adicional para você.'
-        };
+    // Lógica Específica para Desenvolvedores (Hardcoded Legacy Support)
+    if (userRole === 'developer') {
+        // WordPress
+        if (stack.includes('wordpress') || desc.includes('wordpress')) {
+            return {
+                stack: 'WordPress',
+                suggestion: 'Você pode oferecer desenvolvimento visual e plugins de SEO.'
+            };
+        }
+
+        // PHP sem Laravel
+        if (stack.includes('php') && !stack.includes('laravel')) {
+            return {
+                stack: 'PHP ou JavaScript',
+                suggestion: 'O projeto requer PHP. Avalie se vale a pena sugerir migração para JS.'
+            };
+        }
     }
 
-    // Sem stack definida → React + Node
-    if (stack === 'não identificada' || !stack) {
-        return {
-            stack: 'React + Node.js',
-            suggestion: 'Como não há uma tecnologia específica definida, sugiro desenvolver com React no frontend e Node.js no backend, que são tecnologias modernas e performáticas.'
-        };
-    }
+    // Se não encontrou na whitelist e nem nas regras específicas
 
-    // PHP → Perguntar sobre migração
-    if (stack.includes('php') && !stack.includes('laravel')) {
-        return {
-            stack: 'PHP ou JavaScript',
-            suggestion: 'O projeto menciona PHP. Posso desenvolver nessa tecnologia, mas também tenho a opção de migrar para JavaScript (React + Node) caso prefira uma stack mais moderna. O que acha?'
-        };
-    }
-
-    // JS sem React/Node → Respeitar
-    if (stack.includes('javascript') || stack.includes('vue') || stack.includes('angular')) {
+    // Se a stack foi identificada no texto, usamos ela
+    if (stack && stack !== 'não identificada' && stack !== 'não informado') {
         return {
             stack: stackMencionada,
-            suggestion: 'Desenvolverei utilizando a stack mencionada no projeto.'
+            suggestion: `O projeto menciona ${stackMencionada}. Avalie se você atende aos requisitos.`
         };
     }
 
-    // Default
+    // Fallback genérico baseado no papel
     return {
-        stack: stackMencionada,
-        suggestion: null
+        stack: roleConfig.defaultStack,
+        suggestion: `Não identificamos tecnologias específicas. Sugira sua stack padrão: ${roleConfig.defaultStack}.`
     };
 }
 
@@ -226,25 +241,30 @@ function assessViability(classification, stack, descricao, blacklist = []) {
         }
     }
 
-    // Tecnologias com conhecimento básico e complexidade alta
-    const basicKnowledgeStacks = ['python', 'java', '.net', 'ruby', 'mobile', 'flutter', 'swift', 'kotlin'];
-    const hasBasicStack = basicKnowledgeStacks.some(s => stackLower.includes(s));
-
-    if (hasBasicStack && (classification.complexity === 'complexo' || classification.complexity === 'arriscado')) {
-        return 'baixa viabilidade';
+    // Tecnologias desconhecidas (não estão na whitelist)
+    // Se o usuário não tem a skill na whitelist e o projeto pede algo complexo, reduz viabilidade
+    // Simplificação: Se whitelist não está vazia e stack não está nela => Baixo match
+    /*
+    const hasMatch = whitelist.some(tech => stackLower.includes(tech.toLowerCase()) || desc.includes(tech.toLowerCase()));
+    if (whitelist.length > 0 && !hasMatch && classification.complexity !== 'simples') {
+        return 'viável com ressalvas (stack não listada)';
     }
-
-    // Projeto arriscado
-    if (classification.complexity === 'arriscado') {
-        return 'arriscado - avaliar com cautela';
-    }
-
-    // Projeto com complexidade alta em stack com conhecimento básico
-    if (hasBasicStack) {
-        return 'viável com ressalvas';
-    }
+    */
 
     return 'viável';
+}
+
+// Projeto arriscado
+if (classification.complexity === 'arriscado') {
+    return 'arriscado - avaliar com cautela';
+}
+
+// Projeto com complexidade alta em stack com conhecimento básico
+if (hasBasicStack) {
+    return 'viável com ressalvas';
+}
+
+return 'viável';
 }
 
 /**
@@ -347,13 +367,7 @@ function getKnowledgeLevel(stack, whitelist = []) {
         }
     }
 
-    for (const [key, level] of Object.entries(TECHNICAL_KNOWLEDGE)) {
-        if (stackLower.includes(key.toLowerCase())) {
-            return level;
-        }
-    }
-
-    return 'médio'; // Default
+    return 'básico'; // Se não está na whitelist, assume básico para ser conservador
 }
 
 module.exports = {

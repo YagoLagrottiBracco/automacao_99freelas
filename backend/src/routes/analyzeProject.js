@@ -88,7 +88,8 @@ router.post('/analyze', authMiddleware, async (req, res, next) => {
             projectData,
             rulesResult,
             userConfig?.proposalTemplate,
-            aiResponse.duvidaPertinente
+            aiResponse.duvidaPertinente,
+            userConfig
         );
 
         const response = {
@@ -102,7 +103,7 @@ router.post('/analyze', authMiddleware, async (req, res, next) => {
         console.log('✅ Análise concluída com sucesso');
 
         // Registra o uso (desconta do trial)
-        await accessService.logUsage(userId, projectData.tituloProjeto);
+        await accessService.logUsage(userId, projectData, response);
 
         res.json(response);
 

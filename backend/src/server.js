@@ -86,7 +86,7 @@ const userRoutes = require('./routes/user.routes');
 app.use('/api', analyzeProjectRoute);
 app.use('/api', paymentsRoutes);
 app.use('/api', userRoutes);
-app.use('/api', privacyRoutes);
+app.use('/', privacyRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
